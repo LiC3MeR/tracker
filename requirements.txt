@@ -1,0 +1,5 @@
+psutil
+pygetwindow
+SQLAlchemy
+matplotlib
+pandas
