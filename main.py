@@ -1,49 +1,92 @@
-import psutil
+import os
 import time
-import sqlite3
 from datetime import datetime
-import pygetwindow as gw
+from PIL import ImageGrab
+from pynput import mouse, keyboard
+import sqlalchemy as sa
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 
-# Создаем или подключаемся к базе данных
-conn = sqlite3.connect(r'C:\Users\New\PycharmProjects\tracker\activity_tracker.db')
-c = conn.cursor()
+# Настройка базы данных
+DATABASE_URL = r'sqlite:///C:\Users\New\PycharmProjects\tracker\activity_tracker.db'
+engine = sa.create_engine(DATABASE_URL)
+Session = sessionmaker(bind=engine)
+session = Session()
+Base = sa.orm.declarative_base()
 
-# Создаем таблицу для хранения данных
-c.execute('''CREATE TABLE IF NOT EXISTS activity_log (
-                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                 application TEXT,
-                 start_time TEXT,
-                 end_time TEXT)''')
+# Определение модели для хранения данных
+class ActivityLog(Base):
+    __tablename__ = 'activity_log'
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    timestamp = sa.Column(sa.DateTime, default=datetime.utcnow)
+    screenshot_path = sa.Column(sa.String)
+    keyboard_activity = sa.Column(sa.String)
+    mouse_activity = sa.Column(sa.String)
 
-def get_active_window():
+Base.metadata.create_all(engine)
+
+# Настройка директорий
+SCREENSHOT_DIR = os.path.join('static', 'screenshots')
+if not os.path.exists(SCREENSHOT_DIR):
+    os.makedirs(SCREENSHOT_DIR)
+
+keyboard_activity = []
+mouse_activity = []
+
+def on_press(key):
     try:
-        window = gw.getActiveWindow()
-        if window:
-            return window.title
-    except:
+        keyboard_activity.append(f'{key.char}')
+    except AttributeError:
+        keyboard_activity.append(f'{key}')
+    print(f"Key pressed: {key}")
+
+def on_click(x, y, button, pressed):
+    mouse_activity.append(f'{"Pressed" if pressed else "Released"} at ({x}, {y}) with {button}')
+    print(f"Mouse {'Pressed' if pressed else 'Released'} at ({x}, {y}) with {button}")
+
+def capture_screenshot():
+    try:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        screenshot_path = os.path.join(SCREENSHOT_DIR, f'screenshot_{timestamp}.png')
+        ImageGrab.grab().save(screenshot_path)
+        print(f"Screenshot captured: {screenshot_path}")
+        return screenshot_path
+    except Exception as e:
+        print(f"Failed to capture screenshot: {e}")
         return None
-    return None
 
-def log_activity(application, start_time, end_time):
-    c.execute("INSERT INTO activity_log (application, start_time, end_time) VALUES (?, ?, ?)",
-              (application, start_time, end_time))
-    conn.commit()
+def save_activity(screenshot_path):
+    if screenshot_path is not None:
+        relative_path = os.path.relpath(screenshot_path, 'static').replace('\\', '/')
+        log = ActivityLog(
+            screenshot_path=relative_path,
+            keyboard_activity=''.join(keyboard_activity),
+            mouse_activity=' | '.join(mouse_activity)
+        )
+        session.add(log)
+        session.commit()
+        print(f"Activity saved: {log}")
 
-current_app = None
-start_time = None
+def main():
+    mouse_listener = mouse.Listener(on_click=on_click)
+    keyboard_listener = keyboard.Listener(on_press=on_press)
 
-try:
-    while True:
-        active_app = get_active_window()
-        if active_app != current_app:
-            if current_app:
-                end_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                log_activity(current_app, start_time, end_time)
-            current_app = active_app
-            start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        time.sleep(5)  # Проверяем каждые 5 секунд
-except KeyboardInterrupt:
-    if current_app:
-        end_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        log_activity(current_app, start_time, end_time)
-    conn.close()
+    mouse_listener.start()
+    keyboard_listener.start()
+
+    print("Listeners started. Monitoring activity...")
+
+    try:
+        while True:
+            time.sleep(180)  # Задержка в 3 минуты
+            screenshot_path = capture_screenshot()
+            save_activity(screenshot_path)
+            keyboard_activity.clear()
+            mouse_activity.clear()
+    except KeyboardInterrupt:
+        mouse_listener.stop()
+        keyboard_listener.stop()
+        print("Monitoring stopped.")
+
+if __name__ == '__main__':
+    main()

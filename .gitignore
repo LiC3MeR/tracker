@@ -1,2 +1,4 @@
 .idea
 *.db
+screenshots
+activity_tracker.db

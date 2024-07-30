@@ -3,3 +3,7 @@ pygetwindow
 SQLAlchemy
 matplotlib
 pandas
+pillow
+pynput
+flask
+sqlalchemy

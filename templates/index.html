@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Tracker</title>
+</head>
+<body>
+    <h1>Activity Tracker</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Screenshot</th>
+                <th>Keyboard Activity</th>
+                <th>Mouse Activity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.timestamp }}</td>
+                <td><img src="{{ url_for('static', filename=log.screenshot_path) }}" alt="Screenshot" width="200"></td>
+                <td>{{ log.keyboard_activity }}</td>
+                <td>{{ log.mouse_activity }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
