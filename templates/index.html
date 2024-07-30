@@ -34,8 +34,8 @@
                 <tr>
                     <th>Timestamp</th>
                     <th>Screenshot</th>
-                    <th>Keyboard Activity</th>
-                    <th>Mouse Activity</th>
+                    <th>Keyboard Activity Count</th>
+                    <th>Mouse Activity Count</th>
                 </tr>
             </thead>
             <tbody>
@@ -45,8 +45,8 @@
                     <td>
                         <img src="{{ url_for('static', filename=log.screenshot_path) }}" alt="Screenshot" width="200" data-toggle="modal" data-target="#screenshotModal{{ loop.index }}">
                     </td>
-                    <td>{{ log.keyboard_activity }}</td>
-                    <td>{{ log.mouse_activity }}</td>
+                    <td>{{ log.keyboard_activity_count }}</td>
+                    <td>{{ log.mouse_activity_count }}</td>
                 </tr>
 
                 <!-- Modal -->

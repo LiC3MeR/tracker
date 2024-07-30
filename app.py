@@ -19,8 +19,8 @@ class ActivityLog(Base):
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     timestamp = sa.Column(sa.DateTime, default=datetime.utcnow)
     screenshot_path = sa.Column(sa.String)
-    keyboard_activity = sa.Column(sa.String)
-    mouse_activity = sa.Column(sa.String)
+    keyboard_activity_count = sa.Column(sa.String)
+    mouse_activity_count = sa.Column(sa.String)
 
 @app.route('/')
 def index():

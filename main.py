@@ -20,8 +20,8 @@ class ActivityLog(Base):
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     timestamp = sa.Column(sa.DateTime, default=datetime.utcnow)
     screenshot_path = sa.Column(sa.String)
-    keyboard_activity = sa.Column(sa.String)
-    mouse_activity = sa.Column(sa.String)
+    keyboard_activity_count = sa.Column(sa.Integer, default=0)
+    mouse_activity_count = sa.Column(sa.Integer, default=0)
 
 Base.metadata.create_all(engine)
 
@@ -31,18 +31,18 @@ SCREENSHOT_DIR = os.path.join(BASE_DIR, 'static', 'screenshots')
 if not os.path.exists(SCREENSHOT_DIR):
     os.makedirs(SCREENSHOT_DIR)
 
-keyboard_activity = []
-mouse_activity = []
+keyboard_activity_count = 0
+mouse_activity_count = 0
 
 def on_press(key):
-    try:
-        keyboard_activity.append(f'{key.char}')
-    except AttributeError:
-        keyboard_activity.append(f'{key}')
+    global keyboard_activity_count
+    keyboard_activity_count += 1
     print(f"Key pressed: {key}")
 
 def on_click(x, y, button, pressed):
-    mouse_activity.append(f'{"Pressed" if pressed else "Released"} at ({x}, {y}) with {button}')
+    global mouse_activity_count
+    if pressed:
+        mouse_activity_count += 1
     print(f"Mouse {'Pressed' if pressed else 'Released'} at ({x}, {y}) with {button}")
 
 def capture_screenshot():
@@ -59,13 +59,12 @@ def capture_screenshot():
 def save_activity(screenshot_path):
     if screenshot_path is not None:
         relative_path = os.path.relpath(screenshot_path, BASE_DIR).replace('\\', '/')
-        # Убедитесь, что путь не содержит 'static/static'
         if relative_path.startswith('static/'):
             relative_path = relative_path[len('static/'):]
         log = ActivityLog(
             screenshot_path=relative_path,
-            keyboard_activity=''.join(keyboard_activity),
-            mouse_activity=' | '.join(mouse_activity)
+            keyboard_activity_count=keyboard_activity_count,
+            mouse_activity_count=mouse_activity_count
         )
         session.add(log)
         session.commit()
@@ -85,8 +84,9 @@ def main():
             time.sleep(180)  # Задержка в 3 минуты
             screenshot_path = capture_screenshot()
             save_activity(screenshot_path)
-            keyboard_activity.clear()
-            mouse_activity.clear()
+            global keyboard_activity_count, mouse_activity_count
+            keyboard_activity_count = 0
+            mouse_activity_count = 0
     except KeyboardInterrupt:
         mouse_listener.stop()
         keyboard_listener.stop()
