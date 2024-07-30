@@ -4,28 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Activity Tracker</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+        }
+        table {
+            width: 100%;
+        }
+        th, td {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .modal-content {
+            background-color: #333333;
+            color: #ffffff;
+        }
+        .modal-header, .modal-footer {
+            border-color: #444444;
+        }
+    </style>
 </head>
 <body>
-    <h1>Activity Tracker</h1>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Timestamp</th>
-                <th>Screenshot</th>
-                <th>Keyboard Activity</th>
-                <th>Mouse Activity</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for log in logs %}
-            <tr>
-                <td>{{ log.timestamp }}</td>
-                <td><img src="{{ url_for('static', filename=log.screenshot_path) }}" alt="Screenshot" width="200"></td>
-                <td>{{ log.keyboard_activity }}</td>
-                <td>{{ log.mouse_activity }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="container">
+        <h1 class="text-center my-4">Activity Tracker</h1>
+        <table class="table table-dark table-bordered">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Screenshot</th>
+                    <th>Keyboard Activity</th>
+                    <th>Mouse Activity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.timestamp }}</td>
+                    <td>
+                        <img src="{{ url_for('static', filename=log.screenshot_path) }}" alt="Screenshot" width="200" data-toggle="modal" data-target="#screenshotModal{{ loop.index }}">
+                    </td>
+                    <td>{{ log.keyboard_activity }}</td>
+                    <td>{{ log.mouse_activity }}</td>
+                </tr>
+
+                <!-- Modal -->
+                <div class="modal fade" id="screenshotModal{{ loop.index }}" tabindex="-1" role="dialog" aria-labelledby="screenshotModalLabel{{ loop.index }}" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="screenshotModalLabel{{ loop.index }}">Screenshot</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <img src="{{ url_for('static', filename=log.screenshot_path) }}" alt="Screenshot" class="img-fluid">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

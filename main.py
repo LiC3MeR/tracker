@@ -26,7 +26,8 @@ class ActivityLog(Base):
 Base.metadata.create_all(engine)
 
 # Настройка директорий
-SCREENSHOT_DIR = os.path.join('static', 'screenshots')
+BASE_DIR = r'C:\Users\New\PycharmProjects\tracker'
+SCREENSHOT_DIR = os.path.join(BASE_DIR, 'static', 'screenshots')
 if not os.path.exists(SCREENSHOT_DIR):
     os.makedirs(SCREENSHOT_DIR)
 
@@ -57,7 +58,10 @@ def capture_screenshot():
 
 def save_activity(screenshot_path):
     if screenshot_path is not None:
-        relative_path = os.path.relpath(screenshot_path, 'static').replace('\\', '/')
+        relative_path = os.path.relpath(screenshot_path, BASE_DIR).replace('\\', '/')
+        # Убедитесь, что путь не содержит 'static/static'
+        if relative_path.startswith('static/'):
+            relative_path = relative_path[len('static/'):]
         log = ActivityLog(
             screenshot_path=relative_path,
             keyboard_activity=''.join(keyboard_activity),
